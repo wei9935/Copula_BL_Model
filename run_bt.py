@@ -29,7 +29,7 @@ train_length = 12  #Month
 hold_period = 1    #Month
 tw_mkt = '^TWII'
 tw_top_all, tw_top_shares, tw_macros, tw_month = tw_data(tw_mkt=tw_mkt, ranking=50, start=start, download_start=download_start, end=end, lag=20)
-tw_rf = pd.read_csv('TW_risk_free_rate.csv', index_col=0)
+tw_rf = pd.read_csv('data/TW_risk_free_rate.csv', index_col=0)
 
 # max sharpe
 t50_val_RF, t50_wt_RF = roll_test(tw_top_all, t50RF, 'Pearson', tw_mkt, optimize='MV', rolling_window=train_length, forcast_period=hold_period, 
@@ -126,12 +126,9 @@ tw_val_listDF = [
     t50_val_XG, t50_val_XGS, t50_val_rvXG, 
     cvt50_val_RF, cvt50_val_RFS, cvt50_val_rvRF,
     cvt50_val_XG, cvt50_val_XGS, cvt50_val_rvXG,
-    Ecvt50_val_rvRF, 
-    Ecvt50_val_rvXG, 
-    Ucvt50_val_rvRF, 
-    Ucvt50_val_rvXG,
-    UEcvt50_val_rvRF, 
-    UEcvt50_val_rvXG,
+    Ecvt50_val_rvRF, Ecvt50_val_rvXG, 
+    Ucvt50_val_rvRF, Ucvt50_val_rvXG,
+    UEcvt50_val_rvRF, UEcvt50_val_rvXG,
     mv_val, cvar_val, tw_mktCap_val_mv, tw_eq_val_mv, [tw_benchmark_val]
     ]
 
@@ -156,12 +153,50 @@ methods = [
     ]
 
 tw_val_df = pd.DataFrame(data=dict(zip(methods, tw_val_list)))
-tw_val_df.index = tw_val_df.index.strftime('%Y-%m-%d')
 tw_perf = performance_metric(tw_val_df, tw_rf)
 
+############### plot ###############
+best = ['Rvine_RF_MV', 'Rvine_XGB_MV','Rvine_RF_CVaR',
+    'Pearson_XGB_CVaR', 'Rvine_XGB_CVaR',
+    'ML_un_Non-Norm_Rvine_RF_CVaR', 'ML_un_Non-Norm_Rvine_XGB_CVaR', 
+    'Equal_Weight', tw_mkt
+    ]
+copula = ['Pearson_RF_MV', 'Rvine_RF_MV', 
+    'Pearson_XGB_MV','Rvine_XGB_MV',
+    'Non-Norm_Rvine_RF_CVaR', 
+    'Non-Norm_Rvine_XGB_CVaR', 
+    'ML_un_Non-Norm_Rvine_RF_CVaR', 
+    'ML_un_Non-Norm_Rvine_XGB_CVaR', 
+   'Equal_Weight', tw_mkt
+   ]
+predictor = ['Pearson_RF_MV', 'Rvine_RF_MV', 
+    'Pearson_XGB_MV', 'Rvine_XGB_MV',
+    'Pearson_RF_CVaR', 'Rvine_RF_CVaR', 'Rvine_XGB_CVaR',
+    'ML_un_Non-Norm_Rvine_RF_CVaR', 
+    'ML_un_Non-Norm_Rvine_XGB_CVaR', 
+    ]
+
+title = ['Best Performers', 'Copula\'s Imporovements', 'Compare of Different Predictor']
+for i, plot in enumerate([best, copula, predictor]):
+    plt.figure(figsize=(10, 6))  # Adjust the figure size as needed
+    for column in plot:
+        plt.plot(tw_val_df.index, tw_val_df[column], label=column)
+
+    plt.title('Portfolio Value - ' + title[i])
+    plt.xlabel('Date')
+    plt.ylabel('Values')
+
+    plt.legend(ncol=2, fontsize='small', loc='upper left')
+    plt.grid(axis='x', color='gray', alpha=0.15)
+    plt.show()
+    file_name = f'result/TW_results_{title[i]}.png'
+    plt.savefig(file_name)
+
+'''
 tw_val_df.to_csv(f'results/{trade_period}_TW_TOP50_COP.csv', index=True)
 tw_val_df.to_excel(f'results/{trade_period}_TW_TOP50_COP.xlsx', index=True)
 tw_perf.to_excel(f'results/{trade_period}_TW_TOP50_PERF.xlsx')
+'''
 
 tw_wt_list = [
     t50_wt_RF, t50_wt_RFS, t50_wt_rvRF, 
@@ -178,14 +213,16 @@ tw_wt_list = [
     ]
 
 tw_wt_list[0].index.strftime('%Y-%M-%d')
+
+"""
 with pd.ExcelWriter(f'results/{trade_period}_TW_TOP50_COP_WTs.xlsx') as writer:
     # Iterate over each dataframe and method, and write each dataframe to a separate sheet
     for method, df in zip([x for x in methods if x != 'Benchmark'], tw_wt_list):
         df.to_excel(writer, sheet_name=method, index=True)
+"""
 
 
-
-##### US #####
+################################################## US ############################################################
 mkt = '^GSPC'
 start='2019-01-01'
 download_start = (pd.to_datetime(start) - relativedelta(months=1)).replace(day=1).strftime('%Y-%m-%d')
@@ -195,7 +232,7 @@ train_length = 12
 hold_period = 1
 
 top_all, top_shares, macros, month = us_data(mkt, 50, start, download_start, end, lag=20)
-us_rf = pd.read_csv("US_risk_free_rate.csv", index_col=0)
+us_rf = pd.read_csv("data/US_risk_free_rate.csv", index_col=0)
 
 #max Sharpe
 u50_val_RF, u50_wt_RF = roll_test(top_all, u50RF, 'Pearson', mkt, optimize='MV', rolling_window=train_length, forcast_period=hold_period, 
@@ -271,6 +308,7 @@ us_eq_val_mv, us_eq_wt_mv = simple_roll_test(top_all, 'EQW', rolling_window=trai
 us_mktCap_val_mv, us_mktCap_wt_mv = simple_roll_test(top_all, 'MKT', rolling_window=train_length, forcast_period=hold_period, mkt=mkt, share_df=top_shares)
 
 
+# Store Portfolios' Value
 df_close = top_all.loc[:,('Adj Close', slice(None))]
 df_close.columns = df_close.columns.get_level_values(1)
 mkt_prices = pd.Series(df_close[mkt], name = mkt)
@@ -293,10 +331,11 @@ val_listDF = [
     Ucvu50_val_rvXG, 
     UEcvu50_val_rvRF, 
     UEcvu50_val_rvXG,
-    us_mktCap_val_mv, us_eq_val_mv, [benchmark_val]
+    mv_val, cvar_val, us_mktCap_val_mv, us_eq_val_mv, [benchmark_val]
     ]
 val_list = []
 for i in val_listDF:
+    print(i)
     series = i[0]
     val_list.append(series)
 
@@ -316,12 +355,54 @@ methods = [
 
 
 val_df = pd.DataFrame(data=dict(zip(methods, val_list)))
-val_df.index = val_df.index.strftime('%Y-%m-%d')
 us_perf = performance_metric(val_df, us_rf)
+
+############### plot ###############
+best = ['Rvine_RF_MV', 'Rvine_XGB_MV','Rvine_RF_CVaR',
+    'Pearson_XGB_CVaR', 'Rvine_XGB_CVaR',
+    'ML_un_Non-Norm_Rvine_RF_CVaR', 'ML_un_Non-Norm_Rvine_XGB_CVaR', 
+    'Equal_Weight', mkt
+    ]
+copula = ['Pearson_RF_MV', 'Rvine_RF_MV', 
+    'Pearson_XGB_MV','Rvine_XGB_MV',
+    'Non-Norm_Rvine_RF_CVaR', 
+    'Non-Norm_Rvine_XGB_CVaR', 
+    'ML_un_Non-Norm_Rvine_RF_CVaR', 
+    'ML_un_Non-Norm_Rvine_XGB_CVaR', 
+   'Equal_Weight', mkt
+   ]
+predictor = ['Pearson_RF_MV', 'Rvine_RF_MV', 
+    'Pearson_XGB_MV', 'Rvine_XGB_MV',
+    'Pearson_RF_CVaR', 'Rvine_RF_CVaR', 'Rvine_XGB_CVaR',
+    'ML_un_Non-Norm_Rvine_RF_CVaR', 
+    'ML_un_Non-Norm_Rvine_XGB_CVaR', 
+    ]
+
+title = ['Best Performers', 'Copula\'s Imporovements', 'Compare of Different Predictor']
+for i, plot in enumerate([best, copula, predictor]):
+    plt.figure(figsize=(10, 6))  # Adjust the figure size as needed
+    for column in plot:
+        plt.plot(val_df.index, val_df[column], label=column)
+    plt.title('Portfolio Value - ' + title[i])
+    plt.xlabel('Date')
+    plt.ylabel('Values')
+
+    plt.legend(ncol=2, fontsize='small', loc='upper left')
+    plt.grid(axis='x', color='gray', alpha=0.15)
+    #plt.show()
+    file_name = f'result/US_results_{title[i]}.png'
+    plt.savefig(file_name)
+
+val_df.index
+tw_val_df.index
+
+'''
 val_df.to_csv(f'results/{trade_period}_US_TOP50_COP.csv', index=True)
 val_df.to_excel(f'results/{trade_period}_US_TOP50_COP.xlsx', index=True)
 us_perf.to_excel(f'results/{trade_period}_US_TOP50_PERF.xlsx', index=True)
+'''
 
+# Save weight changes
 wt_list = [
     u50_wt_RF, u50_wt_RFS, u50_wt_rvRF,
     u50_wt_XG, u50_wt_XGS, u50_wt_rvXG,

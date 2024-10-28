@@ -35,7 +35,7 @@ def get_topN(cap, n):
     return top_list
 
 def us_data(mkt, ranking, start, download_start, end, lag, pred_freq='1d'):
-    us_stocks = pd.read_csv("us_mktCap_2023_12.csv")
+    us_stocks = pd.read_csv("data/us_mktCap_2023_12.csv")
     if type(ranking)==int:
         Top = us_stocks['Symbol'][0:ranking].tolist()
     elif type(ranking)==list:
@@ -52,7 +52,7 @@ def us_data(mkt, ranking, start, download_start, end, lag, pred_freq='1d'):
     return top_all, top_shares, macros, month
 
 def tw_data(tw_mkt, ranking, start, download_start, end, lag, pred_freq='1d'): 
-    mk_cap_file = r"tw_mktCap.xlsx"
+    mk_cap_file = r"data/tw_mktCap.xlsx"
     mkCap = pd.read_excel(mk_cap_file)
     new_columns = {col: col.split(' ')[0] + '.TW' for col in mkCap.columns[1:]}
     mkCap = mkCap.rename(columns=new_columns)

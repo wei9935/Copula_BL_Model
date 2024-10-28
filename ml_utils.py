@@ -12,7 +12,6 @@ import pandas_ta as ta
 import xgboost as xgb
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import TimeSeriesSplit, GridSearchCV
 
 # Create Features
 def yf_create_info(df, name='', lag=20):
